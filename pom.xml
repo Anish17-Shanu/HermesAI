@@ -7,6 +7,15 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
+    <name>HermesAI Platform</name>
+    <description>Production-style Java backend for human-in-the-loop autonomous decisions.</description>
+
+    <developers>
+        <developer>
+            <name>Anish Kumar</name>
+        </developer>
+    </developers>
+
     <modules>
         <module>common-lib</module>
         <module>api-gateway</module>
