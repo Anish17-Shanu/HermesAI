@@ -1,0 +1,140 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: hermesai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.7
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+
+  decision-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.decision-service
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hermesai
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8081:8081"
+
+  human-review-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.human-review-service
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hermesai
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8082:8082"
+
+  workflow-orchestrator-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.workflow-orchestrator-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hermesai
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8083:8083"
+
+  feedback-learning-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.feedback-learning-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hermesai
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8084:8084"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.notification-service
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8085:8085"
+
+  audit-logging-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.audit-logging-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/hermesai
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      KAFKA_BOOTSTRAP: kafka:9092
+    ports:
+      - "8086:8086"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.api-gateway
+    depends_on:
+      - decision-service
+      - human-review-service
+      - workflow-orchestrator-service
+      - feedback-learning-service
+      - notification-service
+      - audit-logging-service
+    ports:
+      - "8080:8080"
