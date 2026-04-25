@@ -30,6 +30,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@SuppressWarnings("deprecation")
 public class SharedSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${hermes.security.jwt-secret:hermes-shared-secret-hermes-shared-secret}")

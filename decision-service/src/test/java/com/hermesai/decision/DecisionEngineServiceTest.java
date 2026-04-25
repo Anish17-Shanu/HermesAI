@@ -12,11 +12,12 @@ import org.springframework.kafka.core.KafkaTemplate;
 class DecisionEngineServiceTest {
 
     @Test
+    @SuppressWarnings("unchecked")
     void highRiskRequestsRequireHumanReview() {
         DecisionEngineService service = new DecisionEngineService(
                 Mockito.mock(DecisionRecordRepository.class),
                 Mockito.mock(StringRedisTemplate.class),
-                Mockito.mock(KafkaTemplate.class),
+                (KafkaTemplate<String, Object>) Mockito.mock(KafkaTemplate.class),
                 new SimpleMeterRegistry(),
                 GlobalOpenTelemetry.getTracer("test"));
 

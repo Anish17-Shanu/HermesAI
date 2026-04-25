@@ -13,6 +13,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 class HumanReviewServiceTest {
 
     @Test
+    @SuppressWarnings("unchecked")
     void overrideMarksHumanCorrection() {
         ReviewTaskRepository repository = Mockito.mock(ReviewTaskRepository.class);
         ReviewTask task = new ReviewTask();
@@ -24,7 +25,7 @@ class HumanReviewServiceTest {
 
         HumanReviewApplicationService service = new HumanReviewApplicationService(
                 repository,
-                Mockito.mock(KafkaTemplate.class),
+                (KafkaTemplate<String, Object>) Mockito.mock(KafkaTemplate.class),
                 Mockito.mock(StringRedisTemplate.class),
                 new SimpleMeterRegistry());
 
